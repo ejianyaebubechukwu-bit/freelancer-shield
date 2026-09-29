@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelancer Assistant</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .stats-banner {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            flex: 1;
+            text-align: center;
+        }
+        .stat-val {
+            font-size: 20px;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: 5px;
+        }
+        .stat-val.tax {
+            color: #dc3545;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .currency-select {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .history-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        th {
+            color: #555;
+            background-color: #f9f9f9;
+        }
+        .badge {
+            background-color: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        .clear-btn {
+            background-color: transparent;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            padding: 8px;
+            font-size: 13px;
+            width: auto;
+            display: inline-block;
+            margin-top: 15px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .clear-btn:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stats-banner">
+        <div class="stat-card">
+            <div style="font-size: 12px; color: #777;">💰 TOTAL OWED</div>
+            <div id="total-owed-val" class="stat-val">\$0.00</div>
+        </div>
+        <div class="stat-card">
+            <div style="font-size: 12px; color: #777;">🏦 EST. TAX RESERVE (20%)</div>
+            <div id="tax-reserve-val" class="stat-val tax">\$0.00</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <select id="currency-picker" class="currency-select" onchange="changeCurrencySymbol()">
+            <option value="\$">USD (\$)</option>
+            <option value="€">EUR (€)</option>
+            <option value="£">GBP (£)</option>
+        </select>
+
+        <h2>💼 Freelance Shield</h2>
+        
+        <div class="input-group">
+            <label for="email">Client Email Address</label>
+            <input type="email" id="email" placeholder="client@company.com">
+        </div>
+
+        <div class="input-group">
+            <label id="amount-label" for="amount">Amount Owed (\$)</label>
+            <input type="number" id="amount" placeholder="500.00">
+        </div>
+
+        <!-- NEW: CALENDAR DATE PICKER FIELD -->
+        <div class="input-group">
+            <label for="due-date">Payment Due Date</label>
+            <input type="date" id="due-date">
+        </div>
+
+        <button onclick="sendReminder()">Send Automated Reminder</button>
+    </div>
+
+    <div class="history-container" style="text-align: right;">
+        <h3 style="margin-top:0; color:#333; text-align: left;">📊 Reminder History</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Client Email</th>
+                    <th>Amount</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="history-body">
+                <!-- Data loads here -->
+            </tbody>
+        </table>
+        
+        <button class="clear-btn" onclick="clearAllData()">🗑️ Clear All Records</button>
+    </div>
+
+    <script>
+        let runningTotal = 0;
+        let currencySymbol = '\$';
+        let rawLogsCache = [];
+
+        function renderStats() {
+            document.getElementById('total-owed-val').innerText = `${currencySymbol}${runningTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('tax-reserve-val').innerText = `${currencySymbol}${(runningTotal * 0.2).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        function changeCurrencySymbol() {
+            currencySymbol = document.getElementById('currency-picker').value;
+            document.getElementById('amount-label').innerText = `Amount Owed (${currencySymbol})`;
+            renderStats();
+            renderTableRows();
+        }
+
+        function renderTableRows() {
+            const tbody = document.getElementById('history-body');
+            tbody.innerHTML = '';
+            
+            rawLogsCache.forEach(item => {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${item.email}</td>
+                    <td>${currencySymbol}${parseFloat(item.amount).toFixed(2)}</td>
+                    <td>${item.date || 'No Date'}</td>
+                    <td><span class="badge">Tracked</span></td>
+                `;
+                tbody.appendChild(newRow);
+            });
+        }
+
+        function loadDatabaseHistory() {
+            fetch('/get-history')
+                .then(res => res.json())
+                .then(logs => {
+                    rawLogsCache = logs;
+                    runningTotal = 0;
+                    logs.forEach(item => {
+                        runningTotal += parseFloat(item.amount);
+                    });
+                    renderStats();
+                    renderTableRows();
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Set today's date as default in calendar box
+            document.getElementById('due-date').valueAsDate = new Date();
+            loadDatabaseHistory();
+        });
+
+        function sendReminder() {
+            const emailInput = document.getElementById('email').value;
+            const amountInput = document.getElementById('amount').value;
+            const dateInput = document.getElementById('due-date').value;
+            
+            if(!emailInput || !amountInput || !dateInput) {
+                alert('Please fill out all boxes including the deadline date!');
+                return;
+            }
+
+            fetch('/send-email', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email: emailInput, amount: amountInput, date: dateInput})
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                document.getElementById('email').value = '';
+                document.getElementById('amount').value = '';
+                loadDatabaseHistory();
+            });
+        }
+
+        function clearAllData() {
+            if(confirm("Are you sure you want to completely erase your log database?")) {
+                fetch('/clear-history', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    rawLogsCache = [];
+                    runningTotal = 0;
+                    renderStats();
+                    renderTableRows();
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>
