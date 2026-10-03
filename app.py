@@ -22,12 +22,13 @@ def get_history():
         with open(DATA_FILE, 'r') as f:
             for line in f:
                 if "Client:" in line and "Amount:" in line and "Due:" in line:
-                    # Parse out email, amount, and the calendar deadline info safely
+                    # Clean up and split each entry row line cleanly
                     parts = line.strip().split(' | ')
-                    email = parts[0].replace('Client: ', '')
-                    amount = parts[1].replace('Amount: $', '')
-                    due_date = parts[2].replace('Due: ', '')
-                    history.append({'email': email, 'amount': amount, 'date': due_date})
+                    if len(parts) == 3:
+                        email = parts[0].replace('Client: ', '')
+                        amount = parts[1].replace('Amount: $', '')
+                        due_date = parts[2].replace('Due: ', '')
+                        history.append({'email': email, 'amount': amount, 'date': due_date})
     return jsonify(history)
 
 @app.route('/send-email', methods=['POST'])
@@ -35,13 +36,11 @@ def send_email():
     data = request.json
     client_email = data.get('email')
     amount_owed = data.get('amount')
-    due_date = data.get('date') # <-- NEW: Extract calendar date variable
+    due_date = data.get('date')
     
-    # 1. Save data permanently (now including deadline field)
     with open(DATA_FILE, 'a') as f:
         f.write(f"Client: {client_email} | Amount: ${amount_owed} | Due: {due_date}\n")
         
-    # 2. Add deadline info right into the email body text!
     email_body = f"""
     Dear Client,
     
