@@ -107,15 +107,6 @@
             max-width: 500px;
             margin-bottom: 20px;
         }
-        .search-box {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -161,17 +152,17 @@
     <div class="stats-banner">
         <div class="stat-card">
             <div style="font-size: 12px; color: #777;">💰 TOTAL OWED</div>
-            <div id="total-owed-val" class="stat-val">$0.00</div>
+            <div id="total-owed-val" class="stat-val">\$0.00</div>
         </div>
         <div class="stat-card">
             <div style="font-size: 12px; color: #777;">🏦 EST. TAX RESERVE (20%)</div>
-            <div id="tax-reserve-val" class="stat-val tax">$0.00</div>
+            <div id="tax-reserve-val" class="stat-val tax">\$0.00</div>
         </div>
     </div>
 
     <div class="card">
         <select id="currency-picker" class="currency-select" onchange="changeCurrencySymbol()">
-            <option value="$">USD ($)</option>
+            <option value="\$">USD (\$)</option>
             <option value="€">EUR (€)</option>
             <option value="£">GBP (£)</option>
         </select>
@@ -184,13 +175,8 @@
         </div>
 
         <div class="input-group">
-            <label id="amount-label" for="amount">Amount Owed ($)</label>
+            <label id="amount-label" for="amount">Amount Owed (\$)</label>
             <input type="number" id="amount" placeholder="500.00">
-        </div>
-
-        <div class="input-group">
-            <label for="due-date">Payment Due Date</label>
-            <input type="date" id="due-date">
         </div>
 
         <button onclick="sendReminder()">Send Automated Reminder</button>
@@ -198,15 +184,11 @@
 
     <div class="history-container" style="text-align: right;">
         <h3 style="margin-top:0; color:#333; text-align: left;">📊 Reminder History</h3>
-        
-        <input type="text" id="table-search" class="search-box" placeholder="🔍 Type a client email to filter history..." onkeyup="filterHistoryTable()">
-
         <table>
             <thead>
                 <tr>
                     <th>Client Email</th>
                     <th>Amount</th>
-                    <th>Due Date</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -220,7 +202,7 @@
 
     <script>
         let runningTotal = 0;
-        let currencySymbol = '$';
+        let currencySymbol = '\$';
         let rawLogsCache = [];
 
         function renderStats() {
@@ -244,28 +226,10 @@
                 newRow.innerHTML = `
                     <td>${item.email}</td>
                     <td>${currencySymbol}${parseFloat(item.amount).toFixed(2)}</td>
-                    <td>${item.date || 'No Date'}</td>
                     <td><span class="badge">Tracked</span></td>
                 `;
                 tbody.appendChild(newRow);
             });
-        }
-
-        function filterHistoryTable() {
-            const filterValue = document.getElementById('table-search').value.toLowerCase();
-            const tableRows = document.getElementById('history-body').getElementsByTagName('tr');
-
-            for (let i = 0; i < tableRows.length; i++) {
-                const emailCell = tableRows[i].getElementsByTagName('td')[0]; // FIXED: Targets first cell safely
-                if (emailCell) {
-                    const textValue = emailCell.textContent || emailCell.innerText;
-                    if (textValue.toLowerCase().indexOf(filterValue) > -1) {
-                        tableRows[i].style.display = ""; 
-                    } else {
-                        tableRows[i].style.display = "none"; 
-                    }
-                }
-            }
         }
 
         function loadDatabaseHistory() {
@@ -279,25 +243,48 @@
                     });
                     renderStats();
                     renderTableRows();
-                    filterHistoryTable(); 
                 });
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById('due-date').valueAsDate = new Date();
-            loadDatabaseHistory();
-        });
+        document.addEventListener("DOMContentLoaded", loadDatabaseHistory);
 
         function sendReminder() {
             const emailInput = document.getElementById('email').value;
             const amountInput = document.getElementById('amount').value;
-            const dateInput = document.getElementById('due-date').value;
             
-            if(!emailInput || !amountInput || !dateInput) {
-                alert('Please fill out all boxes including the deadline date!');
+            if(!emailInput || !amountInput) {
+                alert('Please fill out both boxes first!');
                 return;
             }
 
             fetch('/send-email', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email: emailInput, amount: amountInput})
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                document.getElementById('email').value = '';
+                document.getElementById('amount').value = '';
+                loadDatabaseHistory();
+            });
+        }
+
+        function clearAllData() {
+            if(confirm("Are you sure you want to completely erase your log database?")) {
+                fetch('/clear-history', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    rawLogsCache = [];
+                    runningTotal = 0;
+                    renderStats();
+                    renderTableRows();
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>
