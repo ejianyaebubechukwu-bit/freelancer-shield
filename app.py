@@ -22,9 +22,9 @@ def get_history():
         with open(DATA_FILE, 'r') as f:
             for line in f:
                 if "Client:" in line and "Amount:" in line and "Due:" in line:
-                    # Clean up and split each entry row line cleanly
                     parts = line.strip().split(' | ')
                     if len(parts) == 3:
+                        # FIXED: Converting lists to clean text strings using parts[0], parts[1], parts[2]
                         email = parts[0].replace('Client: ', '')
                         amount = parts[1].replace('Amount: $', '')
                         due_date = parts[2].replace('Due: ', '')
