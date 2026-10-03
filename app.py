@@ -6,6 +6,9 @@ from email.mime.text import MIMEText
 app = Flask(__name__, template_folder='.')
 DATA_FILE = 'reminders.txt'
 
+# ==========================================
+# 🔐 YOUR MAILTRAP CREDENTIALS INSTALLED 🔐
+# ==========================================
 SMTP_SERVER = "sandbox.smtp.mailtrap.io"
 SMTP_PORT = 2525
 SMTP_USER = "c51886067070c2"
@@ -21,7 +24,7 @@ def get_history():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
             for line in f:
-                # We look for lines that have Email, Amount, and Due Date split by " | "
+                # Safely inspect lines that contain Email, Amount, and Due Date layout structures
                 if "Client:" in line and "Amount:" in line and "Due:" in line:
                     parts = line.strip().split(' | ')
                     if len(parts) == 3:
@@ -36,12 +39,13 @@ def send_email():
     data = request.json
     client_email = data.get('email')
     amount_owed = data.get('amount')
-    due_date = data.get('date') # <-- Grab the calendar date from the webpage
+    due_date = data.get('date')
     
-    # Save the 3 parts together cleanly separated by " | "
+    # Save the 3 data values permanently to our text database document file
     with open(DATA_FILE, 'a') as f:
         f.write(f"Client: {client_email} | Amount: ${amount_owed} | Due: {due_date}\n")
         
+    # Build the automated transactional invoice message content body
     email_body = f"""
     Dear Client,
     
@@ -59,6 +63,7 @@ def send_email():
     msg['From'] = 'billing@freelanceshield.com'
     msg['To'] = client_email
 
+    # Open network connection stream and dispatch live over the web grid array
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
