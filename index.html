@@ -179,6 +179,12 @@
             <input type="number" id="amount" placeholder="500.00">
         </div>
 
+        <!-- NEW: CALENDAR FIELD -->
+        <div class="input-group">
+            <label for="due-date">Payment Due Date</label>
+            <input type="date" id="due-date">
+        </div>
+
         <button onclick="sendReminder()">Send Automated Reminder</button>
     </div>
 
@@ -189,6 +195,7 @@
                 <tr>
                     <th>Client Email</th>
                     <th>Amount</th>
+                    <th>Due Date</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -226,6 +233,7 @@
                 newRow.innerHTML = `
                     <td>${item.email}</td>
                     <td>${currencySymbol}${parseFloat(item.amount).toFixed(2)}</td>
+                    <td>${item.date || 'No Date'}</td>
                     <td><span class="badge">Tracked</span></td>
                 `;
                 tbody.appendChild(newRow);
@@ -246,21 +254,26 @@
                 });
         }
 
-        document.addEventListener("DOMContentLoaded", loadDatabaseHistory);
+        document.addEventListener("DOMContentLoaded", () => {
+            // Set today's date automatically in the calendar picker box
+            document.getElementById('due-date').valueAsDate = new Date();
+            loadDatabaseHistory();
+        });
 
         function sendReminder() {
             const emailInput = document.getElementById('email').value;
             const amountInput = document.getElementById('amount').value;
+            const dateInput = document.getElementById('due-date').value;
             
-            if(!emailInput || !amountInput) {
-                alert('Please fill out both boxes first!');
+            if(!emailInput || !amountInput || !dateInput) {
+                alert('Please fill out all boxes including the deadline date!');
                 return;
             }
 
             fetch('/send-email', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({email: emailInput, amount: amountInput})
+                body: JSON.stringify({email: emailInput, amount: amountInput, date: dateInput})
             })
             .then(res => res.json())
             .then(data => {
