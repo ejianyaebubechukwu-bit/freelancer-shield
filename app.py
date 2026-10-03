@@ -21,10 +21,10 @@ def get_history():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
             for line in f:
+                # We look for lines that have Email, Amount, and Due Date split by " | "
                 if "Client:" in line and "Amount:" in line and "Due:" in line:
                     parts = line.strip().split(' | ')
                     if len(parts) == 3:
-                        # FIXED: Converting lists to clean text strings using parts[0], parts[1], parts[2]
                         email = parts[0].replace('Client: ', '')
                         amount = parts[1].replace('Amount: $', '')
                         due_date = parts[2].replace('Due: ', '')
@@ -36,8 +36,9 @@ def send_email():
     data = request.json
     client_email = data.get('email')
     amount_owed = data.get('amount')
-    due_date = data.get('date')
+    due_date = data.get('date') # <-- Grab the calendar date from the webpage
     
+    # Save the 3 parts together cleanly separated by " | "
     with open(DATA_FILE, 'a') as f:
         f.write(f"Client: {client_email} | Amount: ${amount_owed} | Due: {due_date}\n")
         
@@ -64,15 +65,16 @@ def send_email():
             server.login(SMTP_USER, SMTP_PWD)
             server.sendmail('billing@freelanceshield.com', [client_email], msg.as_string())
         
-        print(f"\n🚀 [SUCCESS] Email dispatched with due date {due_date} to {client_email}")
         return jsonify({
             "status": "success",
             "message": f"Tracked successfully! Email deadline set for {due_date}."
         })
         
     except Exception as e:
-        print(f"\n❌ [NETWORK ERROR] Failed: {e}")
-        return jsonify({"status": "error", "message": "Network error transmitting email."})
+        return jsonify({
+            "status": "error",
+            "message": "Network error: Could not transmit email."
+        })
 
 @app.route('/clear-history', methods=['POST'])
 def clear_history():
